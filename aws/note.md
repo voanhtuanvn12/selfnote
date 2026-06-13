@@ -125,7 +125,14 @@ AWS Resource Access Manager (RAM)
     - make it easier to configure and mantain SG and route table
     - customer-managed prefix list
         - set of CIDR that you define 
+        - can share with other aws account and aws org
+        - update many SG at once
+    - aws managed prefix list
+        - set of CIDR for aws service
+        - cant create/update/del/share
 
+- Route 53 Outbound resolver
+    - help to scale forwarding rules to your dns in case you have multiple accounts and VPC  
 
 
 
