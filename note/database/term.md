@@ -1,0 +1,1 @@
+SSTable: Sorted String Table - SSTable là một trong những khái niệm quan trọng nhất của LSM Tree.
