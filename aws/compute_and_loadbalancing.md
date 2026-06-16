@@ -284,10 +284,30 @@ Desired Tasks = 10
 ```
 Đây là cách tối ưu chi phí rất phổ biến.
 
+---
 
+AWS EKS
 
+Lambda có thể kết hợp với code deploy để routing traffic (traffic shift for lambda alias)
+- Linear: grow traffic every N minutes until 100%
+- AWS SAM (Serverless Application Model) là framework của AWS giúp bạn định nghĩa, build và deploy ứng dụng serverless bằng Infrastructure as Code đơn giản hơn CloudFormation.
 
+---
 
+AWS API Gateway
+- can cache api response, max ttl 3600s, encryption option, capacity 0.5-237GB 
+- Timeout 29s
+- 10MB max payload size -> nếu muốn dựng aws api gateway làm một proxy để upload:
+    - api gateway
+    - lambda fuction 
+    - gen s3 presign upload url
+S3 Presigned URL Decomposition
+
+---
+
+Tuy nhiên ở hệ thống lớn, người ta thường để API Gateway kiểm tra tính hợp lệ của token (authentication) trước, còn backend xử lý authorization/business permission để giảm tải cho service phía sau. 
+
+---
 
 
 
