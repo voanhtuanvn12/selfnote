@@ -157,6 +157,8 @@ Auto Scaling Group - Dynamic Scaling Policies
     - Anticipate a scaling base on known usage patterns
     - Example: increase the min cap to 10 at 5pm on Fri.
 
+---
+
 Auto Scaling Group - Predictive Scaling 
 - Preductive scaling:
     - continuously forcast load and schedule scaling ahead
@@ -166,6 +168,8 @@ Good metric to scale
 - RequestCountPerTarget
 - Average Network In/Out
 - Any custom metrics
+
+---
 
 Auto Scaling - Good to know
 - Spot Fleet support 
@@ -179,6 +183,7 @@ Auto Scaling - Good to know
     - then terminate instance manually (Cloudformation can help)
     - or use EC2 instance Refresh or Auto Scaling
 
+---
 
 Auto scaling - Instance refresh
 - Goal: update launch template -> then re-creating all ec2
@@ -192,13 +197,92 @@ Auto scaling - Instance refresh
     - ReplaceUnhealthy
     - AZRebalance
     - AlarmNotification
+    - ScheduleAction
+    - AddToLoadBalancer
+    - InstanceRefresh
+
+---
+
+Auto Scaling - Health Checks
+- Health Check available
+    - EC2 Status Checks
+    - ELB Health Checks - http
+
+- ASG will launch a new instance after terminating an unhealthy one 
+- Make sure the health check is simple and checks the correct thing
+
+---
+
+Auto Scaling Group - Solution Architect
+- same target group - scaling group
+
+---
+
+EC2 Spot instance 
+- get a discount 90% compare to On-Demand
+- Define max spot price and get the instance while current spot price < max
+    - the hourly spot price varies based on offer and capacity
+    - if the current spot price > your max price you can choose to stop or terminate your instance with a 2 minute grace period
+
+- Use for batch job
+- not greate for critical job or database
+
+---
+
+EC2 Spot  Fleets
+- Spot Fleet = set of Spot Instance + (optional) On-Demand Instances
+- Strategy to allocate spot instance
+    - lowestPrice: from the pool with the lowest price (cost optimization, short workload)
+    - diversified: distributed accross all pools (great for availibility, long workload)
+    - capacityOptimized: pool with the optimal capacity for the number of instances
+    - prizeCapacityOptimized (recommended): pool with highest capacity available, then select the pool with the lowest price (best choice for most workload)
+
+- Spot fleet allow us to automatically request Spot Instance with the lowest price.
+
+---
+Docker 
+
+---
+ECSTasks Networking
+- none: no network connectivity, no port mapping
+- bridge: user docker's virtual container-based network
+- host: by pass docker's network, use the underlying host network interface
+- awsvpc
+    - every tasks launch on the instance get its own ENI and private IP address
+    - simplified networking, enhanced security, security group, mornitoring, VPC Flow logs.
+    - default mode for fargate task.
+
+---
+
+ECS Service Auto Scaling
+- automatically increase/decrease
 
 
+Launch Type: FARGATE
+- On-demand
+- AWS quản lý toàn bộ server
+- Trả tiền theo CPU/RAM sử dụng
 
 
+Launch Type: FARGATE_SPOT
+- Rẻ hơn rất nhiều (có thể giảm tới ~70%)
+- AWS có thể thu hồi capacity bất kỳ lúc nào (thường báo trước khoảng 2 phút)
 
 
+Mixed Capacity Provider
+```
+FARGATE
++
+FARGATE_SPOT
 
+Ví dụ:
+
+Desired Tasks = 10
+
+2 task -> FARGATE
+8 task -> FARGATE_SPOT
+```
+Đây là cách tối ưu chi phí rất phổ biến.
 
 
 
