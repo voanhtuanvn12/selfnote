@@ -684,7 +684,499 @@ GuardDuty **không có phí cố định**. Bạn trả tiền theo:
 Với hệ thống production, GuardDuty thường là một trong những dịch vụ bảo mật có **chi phí khá hợp lý so với giá trị mang lại**, vì không cần tự xây dựng hệ thống SIEM hay threat detection.
 
 
+---
+Hình này mô tả **AWS Security Hub** như một trung tâm SOC (Security Operations Center) của AWS.
 
+Thay vì vào từng service bảo mật để xem cảnh báo, Security Hub sẽ gom tất cả findings từ nhiều dịch vụ về một nơi.
+
+```text
+GuardDuty      -> phát hiện tấn công
+Inspector      -> phát hiện lỗ hổng
+Macie          -> phát hiện dữ liệu nhạy cảm
+Config         -> phát hiện cấu hình sai
+IAM Analyzer   -> phát hiện quyền public
+Firewall Mgr   -> quản lý firewall
+Health         -> sự cố AWS
+Systems Manager-> compliance EC2
+          ↓
+      Security Hub
+          ↓
+     Findings Dashboard
+```
+
+---
+
+# 1. Macie
+
+Dịch vụ bảo vệ dữ liệu nhạy cảm trong S3.
+
+Macie dùng ML để tìm:
+
+* Thẻ tín dụng
+* CMND/CCCD
+* Số điện thoại
+* Email
+* API Key
+* Password
+
+Ví dụ:
+
+```text
+s3://customer-data/
+
+customer.csv
+
+name,email,credit_card
+```
+
+Macie phát hiện:
+
+```text
+Sensitive Data Found
+Severity: High
+```
+
+### Dùng khi nào?
+
+* Fintech
+* Ngân hàng
+* Healthcare
+* SaaS chứa thông tin khách hàng
+
+---
+
+# 2. GuardDuty
+
+Threat Detection Service.
+
+Tự động phân tích:
+
+* CloudTrail
+* DNS Logs
+* VPC Flow Logs
+* EKS Logs
+
+để phát hiện:
+
+* Account bị hack
+* EC2 bị malware
+* Crypto mining
+* Kết nối IP độc hại
+
+Ví dụ:
+
+```text
+EC2 -> Russian IP
+```
+
+GuardDuty:
+
+```text
+Backdoor Detected
+Severity: High
+```
+
+---
+
+# 3. Inspector
+
+Vulnerability Scanner.
+
+Quét:
+
+* EC2
+* ECR Images
+* Lambda
+
+Tìm:
+
+* CVE
+* Package lỗi thời
+* OpenSSL lỗi
+* Log4j
+
+Ví dụ:
+
+```text
+Ubuntu Server
+
+OpenSSL 1.0
+```
+
+Inspector:
+
+```text
+CVE-2023-XXXX
+Critical
+```
+
+---
+
+# 4. AWS Config
+
+Configuration Compliance.
+
+Theo dõi toàn bộ thay đổi tài nguyên AWS.
+
+Ví dụ:
+
+```text
+Security Group
+```
+
+Ban đầu:
+
+```text
+22 -> Internal Only
+```
+
+Ai đó đổi:
+
+```text
+22 -> 0.0.0.0/0
+```
+
+Config ghi lại:
+
+```text
+Who
+When
+What changed
+```
+
+---
+
+### Config Rules
+
+Có thể tạo rule:
+
+```text
+S3 phải bật encryption
+```
+
+hoặc
+
+```text
+RDS không được public
+```
+
+Vi phạm:
+
+```text
+NON_COMPLIANT
+```
+
+---
+
+# 5. Firewall Manager
+
+Quản lý firewall tập trung cho nhiều account.
+
+Rất hữu ích khi dùng:
+
+[AWS Organizations](https://aws.amazon.com/organizations/?utm_source=chatgpt.com)
+
+Ví dụ:
+
+```text
+100 AWS Accounts
+```
+
+Muốn tất cả đều có:
+
+* WAF
+* Shield
+* Security Groups chuẩn
+
+Thay vì cấu hình từng account:
+
+```text
+Firewall Manager
+      ↓
+Deploy toàn bộ
+```
+
+---
+
+# 6. IAM Access Analyzer
+
+Phân tích IAM Policy.
+
+Tìm:
+
+* Public Access
+* Cross Account Access
+* Overly Permissive Policy
+
+Ví dụ:
+
+```json
+{
+  "Principal": "*"
+}
+```
+
+Analyzer:
+
+```text
+Publicly Accessible
+```
+
+---
+
+### Một ví dụ phổ biến
+
+Bucket:
+
+```text
+customer-data
+```
+
+Policy:
+
+```json
+{
+  "Principal": "*"
+}
+```
+
+IAM Access Analyzer:
+
+```text
+External Access Found
+```
+
+---
+
+# 7. Systems Manager (SSM)
+
+Quản lý máy chủ tập trung.
+
+Có thể:
+
+### Run Command
+
+```text
+Chạy command trên 1000 EC2
+```
+
+Ví dụ:
+
+```bash
+sudo yum update
+```
+
+---
+
+### Patch Manager
+
+Tự vá lỗi OS.
+
+Ví dụ:
+
+```text
+Windows Update
+Ubuntu Security Update
+```
+
+---
+
+### Session Manager
+
+SSH vào EC2 mà không cần:
+
+```text
+SSH Key
+Bastion Host
+```
+
+---
+
+### Compliance
+
+Kiểm tra:
+
+```text
+Máy nào chưa vá
+Máy nào sai cấu hình
+```
+
+Kết quả đẩy vào Security Hub.
+
+---
+
+# 8. AWS Health
+
+Theo dõi sự cố của AWS.
+
+Ví dụ:
+
+```text
+RDS us-east-1 degraded
+```
+
+hoặc
+
+```text
+EC2 maintenance scheduled
+```
+
+Health báo:
+
+```text
+Resource impacted
+```
+
+---
+
+# Security Hub Findings là gì?
+
+Mỗi service gửi cảnh báo (Finding) về Security Hub.
+
+Ví dụ:
+
+### GuardDuty
+
+```text
+Crypto Mining
+High
+```
+
+### Inspector
+
+```text
+Critical CVE
+Critical
+```
+
+### Config
+
+```text
+S3 Public
+Medium
+```
+
+Security Hub gom lại:
+
+```text
+Critical: 1
+High: 3
+Medium: 7
+```
+
+---
+
+# Security Hub trong môi trường Enterprise
+
+Thông thường kiến trúc sẽ là:
+
+```text
+Multi Account AWS
+
+Account A
+Account B
+Account C
+Account D
+
+      ↓
+
+GuardDuty
+Inspector
+Macie
+Config
+IAM Analyzer
+
+      ↓
+
+Security Hub
+
+      ↓
+
+EventBridge
+
+      ↓
+
+Lambda
+
+      ↓
+
+Slack / Jira / Email
+```
+
+Ví dụ:
+
+```text
+Inspector phát hiện CVE Critical
+```
+
+↓
+
+```text
+Security Hub Finding
+```
+
+↓
+
+```text
+EventBridge Rule
+```
+
+↓
+
+```text
+Tạo Jira Ticket
+```
+
+hoặc:
+
+```text
+Gửi Slack Alert
+```
+
+---
+
+Nếu đi theo hướng **AWS Solution Architect hoặc DevSecOps**, bộ service này thường được hiểu theo nhóm:
+
+| Service             | Chức năng                               |
+| ------------------- | --------------------------------------- |
+| GuardDuty           | Phát hiện tấn công (Threat Detection)   |
+| Inspector           | Quét lỗ hổng (Vulnerability Management) |
+| Macie               | Bảo vệ dữ liệu nhạy cảm (Data Security) |
+| Config              | Compliance & Audit                      |
+| IAM Access Analyzer | Kiểm tra quyền truy cập                 |
+| Firewall Manager    | Quản lý Firewall tập trung              |
+| Systems Manager     | Quản lý & vá máy chủ                    |
+| Health              | Theo dõi sự cố AWS                      |
+| Security Hub        | Trung tâm SOC gom toàn bộ findings      |
+
+Đây chính là "bộ bảo mật chuẩn" mà rất nhiều doanh nghiệp AWS Enterprise triển khai.
+
+
+
+---
+CloudTrail can has 3 types of events ………………, ………………, and ………………
+Management Event
+Data Events
+Cloudtrail Insight
+
+---
+KMS keys are region-specific
+
+The choice "Use CloudHSM" is incorrect because CloudHSM is primarily designed for applications that require hardware security modules (HSMs) to manage cryptographic keys in a highly secure environment. While it can be used for key management, it does not directly provide the multi-region functionality that is needed for a Global DynamoDB table
+
+
+Amazon GuardDuty phân tích các nguồn dữ liệu sau, NGOẠI TRỪ:
+
+✅ GuardDuty phân tích:
+```
+AWS CloudTrail Management Events
+AWS CloudTrail S3 Data Events
+VPC Flow Logs
+DNS Logs
+EKS Audit Logs (nếu bật)
+Runtime Monitoring (EC2, ECS, EKS nếu bật)
+```
+❌ AWS Config không phải là nguồn dữ liệu mà GuardDuty phân tích.
 
 
 
